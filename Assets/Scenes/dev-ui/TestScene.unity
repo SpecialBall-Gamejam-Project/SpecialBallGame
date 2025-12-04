@@ -589,26 +589,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2014113031}
     m_Modifications:
-    - target: {fileID: 494174780138946197, guid: 60c67ad49dd5a344abb94e87c1046def,
-        type: 3}
-      propertyPath: targetPressure
-      value: 30
-      objectReference: {fileID: 0}
-    - target: {fileID: 494174780138946197, guid: 60c67ad49dd5a344abb94e87c1046def,
-        type: 3}
-      propertyPath: currentPressure
-      value: 120
-      objectReference: {fileID: 0}
-    - target: {fileID: 4058109327846249049, guid: 60c67ad49dd5a344abb94e87c1046def,
-        type: 3}
-      propertyPath: m_Color.b
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4058109327846249049, guid: 60c67ad49dd5a344abb94e87c1046def,
-        type: 3}
-      propertyPath: m_Color.r
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 5116846818801787061, guid: 60c67ad49dd5a344abb94e87c1046def,
         type: 3}
       propertyPath: m_Pivot.x

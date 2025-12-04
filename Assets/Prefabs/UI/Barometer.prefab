@@ -195,7 +195,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.7214143, g: 1, b: 0, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -224,14 +224,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 92787659670c35c4488bbd0b4933d52e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxPressure: 120
-  currentPressure: 0
-  threshold1: 25
-  threshold2: 50
-  threshold3: 75
-  threshold4: 100
+  maxPressure: 1.5
+  currentPressure: 0.5
+  targetPressure: 1
+  flyThreshold: 1.2
+  boostThreshold: 0.9
+  normalThreshold: 0.7
+  halfPowerThreshold: 0.5
+  noJumpThreshold: 0.3
   barometerFillImage: {fileID: 4058109327846249049}
   barometerText: {fileID: 5328678553838254097}
   smoothSpeed: 3
-  setTargetPressureAtStart: 0
-  targetPressure: 120
