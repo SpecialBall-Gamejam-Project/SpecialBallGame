@@ -44,12 +44,13 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float noJumpThreshold = 0.3f; // 无跳跃阈值
     
     // 状态相关
-    private enum InflationState { Flying, Boosted, Normal, HalfPower, NoJump, NoMove }
+    public enum InflationState { Flying, Boosted, Normal, HalfPower, NoJump, NoMove }
     private InflationState currentState = InflationState.Normal;
     private bool canMove = true;
     private bool canJump = true;
     private float currentJumpForce = 0f;
     private float baseJumpForce = 0f;
+    public InflationState CurrentState => currentState;
 
     // 水中状态相关参数
     [Space]
