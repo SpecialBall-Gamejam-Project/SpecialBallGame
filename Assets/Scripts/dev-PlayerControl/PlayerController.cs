@@ -61,6 +61,15 @@ public class PlayerController : MonoBehaviour
     private Collider currentWater = null;
     private float originalDrag = 0f;
 
+    // 风域相关
+    [Space]
+    [Header("风域设置")]
+    [SerializeField] private float windForce = 10f;               // 风力强度
+    [SerializeField] private bool windAffectsVertical = false;    // 风是否影响垂直分量
+    private bool inWind = false;
+    private Collider currentWind = null;
+    private Vector3 windDirection = Vector3.zero;
+
     //组件
     //------------------------------
     [Space]
@@ -72,6 +81,7 @@ public class PlayerController : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
         col = GetComponent<Collider>();
+        if (rb != null) originalDrag = rb.drag;
         if (cam==null)
         {
             cam = Camera.main;
@@ -192,6 +202,11 @@ public class PlayerController : MonoBehaviour
         Vector3 origin = transform.position;
         isGrounded = Physics.Raycast(origin, Vector3.down, groundCheckDistance, groundLayers);
 
+        // 风力优先施加（风应持续作用于刚体）
+        if (inWind && currentWind != null)
+        {
+            rb.AddForce(windDirection * windForce, ForceMode.Force);
+        }
 
         // 如果处于飞行状态：持续提供上升力，同时仍然可以滚动控制，但不能跳跃
         if (isFlying)
@@ -271,6 +286,19 @@ public class PlayerController : MonoBehaviour
             }
             Debug.Log("Entered Water");
         }
+        else if (other.CompareTag("Wind"))
+        {
+            // 进入风域：记录风对象与方向（风向为风域的本地 +Z）
+            inWind = true;
+            currentWind = other;
+            windDirection = other.transform.forward;
+            if (!windAffectsVertical)
+            {
+                windDirection.y = 0f;
+            }
+            if (windDirection.sqrMagnitude > 0.001f) windDirection.Normalize();
+            Debug.Log($"Entered Wind - direction={windDirection}");
+        }
     }
 
     private void OnTriggerExit(Collider other)
@@ -286,6 +314,14 @@ public class PlayerController : MonoBehaviour
                 rb.drag = originalDrag;
             }
             Debug.Log("Exited Water");
+        }
+        else if (other.CompareTag("Wind") && other == currentWind)
+        {
+            // 离开风域：停止受该风影响
+            inWind = false;
+            currentWind = null;
+            windDirection = Vector3.zero;
+            Debug.Log("Exited Wind");
         }
     }
 
@@ -316,10 +352,6 @@ public class PlayerController : MonoBehaviour
             // 允许沉：施加向上加速度实现缓入水效果，同时减少上浮阻力
             rb.AddForce(Vector3.up * waterSinkForce, ForceMode.Acceleration);
             // 减弱向上的速度（防止短时间反弹）
-            //if (rb.velocity.y > 0f)
-            //{
-            //    rb.velocity = new Vector3(rb.velocity.x, rb.velocity.y * 0.5f, rb.velocity.z);
-            //}
             Debug.Log($"In Water - Sinkable ({currentState}), sinking...");
         }
         else
