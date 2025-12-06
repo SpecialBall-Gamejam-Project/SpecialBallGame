@@ -21,7 +21,8 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Bullet_VFX_Material
-  m_Shader: {fileID: -6465566751694194690, guid: 16241ab636762e845ac736fc7356dbc0, type: 3}
+  m_Shader: {fileID: -6465566751694194690, guid: 16241ab636762e845ac736fc7356dbc0,
+    type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -65,5 +66,5 @@ Material:
     - Remap: {r: -1, g: 1.51, b: 0, a: 0}
     - TEXCOORD0: {r: 0, g: 0, b: 0, a: 0}
     - Tiling: {r: 1, g: 0.1, b: 0, a: 0}
-    - _Color: {r: 2.9960785, g: 1.8078891, b: 0, a: 1}
+    - _Color: {r: 4, g: 3.5956872, b: 2.9703503, a: 1}
   m_BuildTextureStacks: []

@@ -44,12 +44,13 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float noJumpThreshold = 0.3f; // 无跳跃阈值
     
     // 状态相关
-    private enum InflationState { Flying, Boosted, Normal, HalfPower, NoJump, NoMove }
+    public enum InflationState { Flying, Boosted, Normal, HalfPower, NoJump, NoMove }
     private InflationState currentState = InflationState.Normal;
     private bool canMove = true;
     private bool canJump = true;
     private float currentJumpForce = 0f;
     private float baseJumpForce = 0f;
+    public InflationState CurrentState => currentState;
 
     // 水中状态相关参数
     [Space]
@@ -76,6 +77,14 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private Camera cam;
     private Rigidbody rb;
     private Collider col;
+    
+    [Space]
+    [Header("死亡状态")]
+    public ParticleSystem deathVFX;//死亡VFX动画
+    // 死亡事件，外部订阅
+    public event Action OnDeath;
+    private bool isDead = false;
+    public bool IsDead => isDead;
 
     private void Awake()
     {
@@ -115,6 +124,9 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        // 如果已死亡，屏蔽所有输入与状态更新
+        if (isDead) return;
+
         //获取移动输入
         moveHorizontal = Input.GetAxis("Horizontal");
         moveVertical = Input.GetAxis("Vertical");
@@ -194,6 +206,9 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
+        // 如果已死亡，停止所有物理/控制逻辑（保留死后特效）
+        if (isDead) return;
+
         //小球滚动逻辑（摄像机相对方向）
         //------------------------------
         if (rb == null) return;
@@ -217,7 +232,7 @@ public class PlayerController : MonoBehaviour
                 rb.AddForce(moveDir * speed, ForceMode.Force);
             }
 
-            // 升力
+            // 施加飞行升力
             rb.AddForce(Vector3.up * flyUpForce, ForceMode.Acceleration);
 
             // 调试
@@ -229,14 +244,14 @@ public class PlayerController : MonoBehaviour
         // 跳跃请求
         if (jumpRequested && isGrounded && canJump && currentJumpForce > 0f)
         {
-            // 跳跃方向在跳起瞬间固定，之后不可改变
+            // 记录跳跃方向并施加跳跃
             Vector3 horizontalImpulse = jumpDirection * currentJumpForce;
             Vector3 verticalImpulse = Vector3.up * currentJumpForce;
             Vector3 impulse = verticalImpulse + horizontalImpulse;
             rb.AddForce(impulse, ForceMode.Impulse);
 
             jumpRequested = false;
-            // 跳起后立即标记未接地，防止在同一 FixedUpdate 再受地面移动影响
+            // 跳起后标记未接地
             isGrounded = false;
             return;
         }
@@ -248,7 +263,7 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
-        // 移动：当无法移动时不施加水平推进力并尽量清除水平速度
+        // 移动 -无法移动时不施加水平推进力并尽量清除水平速度
         if (canMove)
         {
             rb.AddForce(moveDir * speed, ForceMode.Force);
@@ -284,7 +299,7 @@ public class PlayerController : MonoBehaviour
             {
                 rb.drag = Mathf.Max(rb.drag, 2f);
             }
-            Debug.Log("Entered Water");
+            //Debug.Log("Entered Water");
         }
         else if (other.CompareTag("Wind"))
         {
@@ -297,7 +312,12 @@ public class PlayerController : MonoBehaviour
                 windDirection.y = 0f;
             }
             if (windDirection.sqrMagnitude > 0.001f) windDirection.Normalize();
-            Debug.Log($"Entered Wind - direction={windDirection}");
+            //Debug.Log($"Entered Wind - direction={windDirection}");
+        }
+        else if(other.CompareTag("Death"))
+        {
+            // 进入死亡区域：触发死亡
+            TriggerDeath();
         }
     }
 
@@ -313,7 +333,7 @@ public class PlayerController : MonoBehaviour
             {
                 rb.drag = originalDrag;
             }
-            Debug.Log("Exited Water");
+            //Debug.Log("Exited Water");
         }
         else if (other.CompareTag("Wind") && other == currentWind)
         {
@@ -321,15 +341,74 @@ public class PlayerController : MonoBehaviour
             inWind = false;
             currentWind = null;
             windDirection = Vector3.zero;
-            Debug.Log("Exited Wind");
+            //Debug.Log("Exited Wind");
         }
+    }
+
+    // 对外调用：触发死亡（道具等外部对象调用此方法）
+    public void TriggerDeath()
+    {
+        if (isDead) return;
+        HandleDeath();
+    }
+
+    // 内部处理死亡逻辑
+    private void HandleDeath()
+    {
+        if (isDead) return;
+        isDead = true;
+
+        // 广播死亡事件给外部订阅者（比如UI）
+        OnDeath?.Invoke();
+
+        // 停止并禁用碰撞体以避免再触发交互
+        if (col != null) col.enabled = false;
+
+        // 停止物理运动并使刚体不再受力
+        if (rb != null)
+        {
+            rb.velocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+            rb.isKinematic = true;
+        }
+
+        // 播放死亡特效（实例化副本以便脱离 Player 对象的生命周期）
+        if (deathVFX != null)
+        {
+            var vfxInstance = Instantiate(deathVFX, transform.position, Quaternion.identity);
+            vfxInstance.Play();
+            // 自动销毁特效对象（基于主系统时长）
+            var lifetime = 0f;
+            try
+            {
+                lifetime = vfxInstance.main.duration + vfxInstance.main.startLifetime.constantMax;
+            }
+            catch { lifetime = 5f; }
+            Destroy(vfxInstance.gameObject, lifetime + 0.1f);
+        }
+
+        // 隐藏模型
+        var rends = GetComponentsInChildren<Renderer>(true);
+        foreach (var r in rends)
+        {
+            r.enabled = false;
+        }
+
+        // 禁用本脚本以进一步保证不会再处理输入（可选：保留 isDead 以在需要时查询）
+        enabled = false;
+    }
+
+    private void OnDisable()
+    {
+        // 如果脚本被禁用但对象还存在，确保 inWind/inWater 标记在必要时清理（防止残留）
+        inWind = false;
+        inWater = false;
     }
 
     // 水域相关逻辑
     //------------------------------
-
-
-    // 判断当前是否可以沉入水底（仅在 HalfPower 或 NoJump 时允许沉）
+    // 判断当前是否可以沉入水底
+    // -仅在 HalfPower 或 NoJump 时允许沉
     private bool IsSinkableInWater()
     {
         return currentState == InflationState.HalfPower || currentState == InflationState.NoJump;
