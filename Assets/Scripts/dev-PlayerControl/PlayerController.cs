@@ -215,8 +215,8 @@ public class PlayerController : MonoBehaviour
     {
         if (isDead) return false;
 
-        // 播放受伤特效（每次调用都会播放）
-        if (hitVFX != null)
+        // 播放受伤特效
+        if (hitVFX != null && amount<0)
         {
             var hitInstance = Instantiate(hitVFX, transform.position, Quaternion.identity);
             try
