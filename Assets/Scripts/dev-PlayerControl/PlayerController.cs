@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEditor.Rendering;
 using UnityEngine;
+using UnityEngine.VFX;
 //实现小球的滚动、跳跃功能
 public class PlayerController : MonoBehaviour
 {
@@ -79,8 +80,9 @@ public class PlayerController : MonoBehaviour
     private Collider col;
     
     [Space]
-    [Header("死亡状态")]
+    [Header("受伤与死亡状态")]
     public ParticleSystem deathVFX;//死亡VFX动画
+    public ParticleSystem hitVFX;  //受伤VFX动画
     // 死亡事件，外部订阅
     public event Action OnDeath;
     private bool isDead = false;
@@ -202,6 +204,41 @@ public class PlayerController : MonoBehaviour
                 jumpDirection = (moveDir.sqrMagnitude > 0.005f) ? moveDir.normalized : Vector3.zero;
             }
         }
+    }
+
+    /// <summary>
+    /// 伤害逻辑:对小球造成伤害（减少充气量）。
+    /// amount 为减少的充气量数值（直接相减）。若造成充气量低于 noJumpThreshold（0.3），触发死亡并返回 true。
+    /// 返回值：true 表示此次调用导致了死亡；false 表示仍然存活。
+    /// </summary>
+    public bool ApplyDamage(float amount)
+    {
+        if (isDead) return false;
+        if (amount <= 0f) return false;
+
+        // 减少充气量并限制范围
+        _inflationScale = Mathf.Max(0f, _inflationScale - amount);
+
+        // 播放受伤特效
+        if (hitVFX != null)
+        {
+            hitVFX.Play();
+        }
+
+        Debug.Log($"PlayerController.ApplyDamage: amount={amount:F3}, inflation={_inflationScale:F3}");
+
+        // 检查是否低于死亡阈值
+        if (_inflationScale < noJumpThreshold)
+        {
+            // 触发死亡
+            TriggerDeath();
+            return true;
+        }
+
+        // 更新状态变量
+        currentState = GetInflationState(_inflationScale);
+
+        return false;
     }
 
     private void FixedUpdate()
