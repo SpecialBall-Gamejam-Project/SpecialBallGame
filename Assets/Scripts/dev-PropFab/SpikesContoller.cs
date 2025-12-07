@@ -31,7 +31,7 @@ public class SpikesContoller : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             // 立即造成一次伤害
-            PlayerController.Instance?.ApplyDamage(damageValue);
+            PlayerController.Instance?.InflationAdd(-damageValue);
 
             // 标记玩家在触发器内并启动定时伤害协程（如果尚未启动）
             playerInside = true;
@@ -57,7 +57,7 @@ public class SpikesContoller : MonoBehaviour
             // 如果玩家已死亡或实例为空则停止
             if (pc.IsDead) break;
 
-            pc.ApplyDamage(damageValue);
+            pc.InflationAdd(-damageValue);
         }
 
         damageCoroutine = null;

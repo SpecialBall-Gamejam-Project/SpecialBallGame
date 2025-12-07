@@ -211,21 +211,28 @@ public class PlayerController : MonoBehaviour
     /// amount 为减少的充气量数值（直接相减）。若造成充气量低于 noJumpThreshold（0.3），触发死亡并返回 true。
     /// 返回值：true 表示此次调用导致了死亡；false 表示仍然存活。
     /// </summary>
-    public bool ApplyDamage(float amount)
+    public bool InflationAdd(float amount)
     {
         if (isDead) return false;
-        if (amount <= 0f) return false;
 
-        // 减少充气量并限制范围
-        _inflationScale = Mathf.Max(0f, _inflationScale - amount);
-
-        // 播放受伤特效
+        // 播放受伤特效（每次调用都会播放）
         if (hitVFX != null)
         {
-            hitVFX.Play();
+            var hitInstance = Instantiate(hitVFX, transform.position, Quaternion.identity);
+            try
+            {
+                hitInstance.Play();
+            }
+            catch { }
+            // 计算大致生命周期并销毁实例
+            float life = 0.5f;
+            Destroy(hitInstance.gameObject, life + 0.1f);
         }
 
-        Debug.Log($"PlayerController.ApplyDamage: amount={amount:F3}, inflation={_inflationScale:F3}");
+        // 修改充气量（调用者传入正负值都支持）
+        _inflationScale = Mathf.Max(0f, _inflationScale + amount);
+
+        Debug.Log($"PlayerController.InflationAdd: amount={amount:F3}, inflation={_inflationScale:F3}");
 
         // 检查是否低于死亡阈值
         if (_inflationScale < noJumpThreshold)
