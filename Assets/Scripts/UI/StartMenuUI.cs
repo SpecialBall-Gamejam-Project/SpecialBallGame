@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 public class StartMenuUI : MonoBehaviour
 {
 
-    public string sceneName = "Level1";
+    public string sceneName = "Persistent";
     public void OnButtonGameStart()
     {
         SceneManager.LoadScene(sceneName);
