@@ -9,7 +9,7 @@ public class TestUI : MonoBehaviour
     void Start()
     {
         pc=PlayerController.Instance;
-        InvokeRepeating("ModifyInflationScale", 1f, 1f);
+        Invoke("ModifyInflationScale", 1f);
     }
 
     // Update is called once per frame
@@ -19,6 +19,6 @@ public class TestUI : MonoBehaviour
     }
     void ModifyInflationScale()
     {
-        pc.inflationScale = 0.7f;
+        pc.TriggerDeath();
     }
 }
