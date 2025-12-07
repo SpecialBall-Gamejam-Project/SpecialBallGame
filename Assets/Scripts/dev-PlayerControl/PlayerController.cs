@@ -224,7 +224,7 @@ public class PlayerController : MonoBehaviour
                 hitInstance.Play();
             }
             catch { }
-            // 计算大致生命周期并销毁实例
+            // 计算大致生命周期销毁实例
             float life = 0.5f;
             Destroy(hitInstance.gameObject, life + 0.1f);
         }
