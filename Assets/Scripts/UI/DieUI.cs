@@ -39,6 +39,7 @@ public class DieUI : MonoBehaviour
 
     public void StartDie()
     {
+        gameObject.SetActive(true);
         StartCoroutine(FadeIn());
     }
     public void OnButtonRestart()
@@ -67,6 +68,7 @@ public class DieUI : MonoBehaviour
             playerInstance = PlayerController.Instance;
         }
         playerInstance.OnDeath += StartDie;
+        gameObject.SetActive(false);
     }
     // Update is called once per frame
     void Update()
